@@ -1,3 +1,13 @@
+# Data files and folders
+data.zip
+data/raw/
+data/preprocessed/
+
+# Ignore large file extensions
+*.nc
+*.tif
+*.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
