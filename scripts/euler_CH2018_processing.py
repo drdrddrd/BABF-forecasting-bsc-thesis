@@ -9,15 +9,16 @@ from multiprocessing import Pool, cpu_count
 import sys
 
 # --- Configuration ---
+# File Paths
 NFI_COORDS_FILE = Path("../data/preprocessed/NFI_CH2018_closest_coords.csv")
-TAS_DIR = Path("tas")
+TAS_DIR = Path("tas") # Would have to get the raw Ch2018 data to run this script and update the paths
 TASMIN_DIR = Path("tasmin")
 TASMAX_DIR = Path("tasmax")
 PR_DIR = Path("pr")
 OUTPUT_DIR = Path("../data/preprocessed/ch2018")
 OUTPUT_FILENAME = "CH2018_yearly_metrics.csv"
 
-# --- Parameters ---
+# Parameters
 GDD_BASE_TEMP = 5.0
 DRY_DAY_THRESHOLD = 1.0
 FROST_DAY_THRESHOLD = 0.0
@@ -34,14 +35,13 @@ def get_unique_simulations(base_dir):
 
 def process_coordinate(args_tuple):
     """
-    Processes a single coordinate's data. This function now expects
+    Processes a single coordinate's data. This function expects
     pre-loaded xarray DataArrays and performs only the calculations.
-    It does NO file I/O.
     """
     lon, lat, simulation_name, tas_ts, tasmin_ts, tasmax_ts, pr_ts = args_tuple
     
     try:
-        # Data is already loaded, so we just calculate
+        # Calculate yearly metrics
         tas_yearly_mean = tas_ts.resample(time='YS').mean()
         tas_yearly_var = tas_ts.resample(time='YS').var()
         tasmin_yearly_mean = tasmin_ts.resample(time='YS').mean()
@@ -51,13 +51,16 @@ def process_coordinate(args_tuple):
         pr_yearly_sum = pr_ts.resample(time='YS').sum()
         pr_yearly_var = pr_ts.resample(time='YS').var()
 
+        # Calculate Growing Degree Days (GDD)
         daily_avg_temp = (tasmax_ts + tasmin_ts) / 2
         daily_gdd = (daily_avg_temp - GDD_BASE_TEMP).clip(min=0)
         gdd_yearly_sum = daily_gdd.resample(time='YS').sum()
 
+        # Calculate count-based metrics
         dry_days_yearly_count = (pr_ts < DRY_DAY_THRESHOLD).resample(time='YS').sum()
         frost_days_yearly_count = (tasmin_ts < FROST_DAY_THRESHOLD).resample(time='YS').sum()
 
+        # Combine all yearly metrics into a single xarray Dataset
         yearly_ds = xr.Dataset({
             'tas_mean': tas_yearly_mean, 'tas_variance': tas_yearly_var,
             'tasmin_mean': tasmin_yearly_mean, 'tasmin_variance': tasmin_yearly_var,
@@ -67,6 +70,7 @@ def process_coordinate(args_tuple):
             'frost_days_count': frost_days_yearly_count,
         })
 
+        # Convert to a pandas DataFrame and add metadata columns
         df = yearly_ds.to_dataframe()
         df['year'] = df.index.year
         df = df.reset_index(drop=True)
@@ -81,6 +85,7 @@ def process_coordinate(args_tuple):
 if __name__ == "__main__":
     start_time = time.time()
     
+    # Determine the number of CPUs to use
     try:
         num_cpus = int(os.environ['SLURM_CPUS_PER_TASK'])
     except KeyError:
@@ -88,23 +93,32 @@ if __name__ == "__main__":
         num_cpus = cpu_count()
     print(f"--- Starting Yearly Metrics with {num_cpus} parallel workers ---", flush=True)
 
+    # Ensure the output directory exists
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
+
+    # Load the target coordinates from the NFI file
     print(f"\n1. Loading target coordinates from: {NFI_COORDS_FILE}", flush=True)
     coords_df = pd.read_csv(NFI_COORDS_FILE)
+    # Process only unique grid points to avoid redundant calculations
     unique_coords_df = coords_df[['closest_CH2018_lon_4326', 'closest_CH2018_lat_4326']].drop_duplicates().reset_index(drop=True)
     print(f"Found {len(unique_coords_df)} unique CH2018 coordinates to process.", flush=True)
 
+
+    # Identify all available climate simulations from the filenames
     print("\n2. Identifying unique climate simulations...", flush=True)
     simulations = get_unique_simulations(PR_DIR)
     print(f"Found {len(simulations)} simulations to process.", flush=True)
 
     all_results = []
     
+
+    # Main loop: process one climate simulation at a time
     for sim_idx, sim_name in enumerate(simulations):
         sim_start_time = time.time()
         print(f"\n--- Processing Simulation {sim_idx + 1}/{len(simulations)}: {sim_name} ---", flush=True)
         
+        # Find all NetCDF files corresponding to the current simulation for each variable
         simulation_files_map = {
             'tas': sorted(list(TAS_DIR.glob(f"*_{sim_name}_*.nc"))),
             'tasmin': sorted(list(TASMIN_DIR.glob(f"*_{sim_name}_*.nc"))),
@@ -112,14 +126,12 @@ if __name__ == "__main__":
             'pr': sorted(list(PR_DIR.glob(f"*_{sim_name}_*.nc"))),
         }
         
-        # Check that we found at least one file for each variable
+        # Basic check to ensure data files for all variables were found
         if not all(simulation_files_map.values()):
             print(f"  WARNING: Missing one or more variable files for {sim_name}. Skipping.", flush=True)
             continue
             
-        # Load all data for the simulation into memory ONCE.
-        # This prevents I/O contention in the parallel workers.
-        # We use open_mfdataset, which works correctly for one or multiple files.
+        # Load all data for the simulation into memory only once to avoid memory issues.
         print("  Loading simulation data into memory (this may take a moment)...", flush=True)
         try:
             with xr.open_mfdataset(simulation_files_map['tas']) as ds:
@@ -136,22 +148,24 @@ if __name__ == "__main__":
         print("  Data loaded.", flush=True)
 
         # Prepare tasks by pre-selecting the data for each coordinate.
-        # This passes only the necessary small 1D arrays to each worker.
         tasks_for_pool = []
         for _, row in unique_coords_df.iterrows():
             lon = row['closest_CH2018_lon_4326']
             lat = row['closest_CH2018_lat_4326']
-            # Select the 1D time series for this specific point
+            # Select the time series for this specific point
             tas_ts = tas_all.sel(lon=lon, lat=lat, method='nearest')
             tasmin_ts = tasmin_all.sel(lon=lon, lat=lat, method='nearest')
             tasmax_ts = tasmax_all.sel(lon=lon, lat=lat, method='nearest')
             pr_ts = pr_all.sel(lon=lon, lat=lat, method='nearest')
             tasks_for_pool.append((lon, lat, sim_name, tas_ts, tasmin_ts, tasmax_ts, pr_ts))
-            
+        
+        # Execute the calculations in parallel
         print(f"  Dispatching {len(tasks_for_pool)} coordinate tasks to {num_cpus} cpus for calculation...", flush=True)
         with Pool(processes=num_cpus) as pool:
+            # pool.map applies the `process_coordinate` function to each item in `tasks_for_pool`
             results_for_this_sim = pool.map(process_coordinate, tasks_for_pool)
         
+        # Collect and verify the results from the parallel processing
         successful_dfs = []
         for lon, lat, sim, df, error in results_for_this_sim:
             if error:
@@ -168,29 +182,38 @@ if __name__ == "__main__":
             print(f"    - WARNING: {num_expected - num_successful} coordinates failed to process for this simulation.", flush=True)
         else:
             print(f"    - SUCCESS: All coordinates processed successfully.", flush=True)
-            
+        
+        # Append the successfully processed DataFrames to the master list
         all_results.extend(successful_dfs)
         sim_end_time = time.time()
         print(f"  Finished simulation in {(sim_end_time - sim_start_time)/60:.2f} minutes.", flush=True)
 
-    # --- Final aggregation and merge ---
+
+    # Final aggregation and merge
     print("\n--- Aggregating all results ---", flush=True)
     if not all_results:
         print("FATAL: No results were successfully generated. Exiting.", flush=True)
         sys.exit(1)
-        
+    
+    # Concatenate the list of individual DataFrames into one large DataFrame
     final_df = pd.concat(all_results, ignore_index=True)
     
     print("\n--- Merging with NFI identifiers ---", flush=True)
+    # Rename columns to match the original coordinates file for merging
     final_df.rename(columns={'lon': 'closest_CH2018_lon_4326', 'lat': 'closest_CH2018_lat_4326'}, inplace=True)
     
-    nfi_identifiers = coords_df[['CLNR', 'closest_CH2018_lon_4326', 'closest_CH2018_lat_4326']].drop_duplicates() 
+    # Get the unique mapping of NFI plot ID (CLNR) to CH2018 grid coordinates
+    nfi_identifiers = coords_df[['CLNR', 'closest_CH2018_lon_4326', 'closest_CH2018_lat_4326']].drop_duplicates()
+    # Merge the climate data with the NFI plot IDs
     merged_df = pd.merge(nfi_identifiers, final_df, on=['closest_CH2018_lon_4326', 'closest_CH2018_lat_4326'])
     
+    # Reorder columns for better readability: identifiers first, then sorted metrics
     id_cols = ['CLNR', 'simulation', 'year', 'closest_CH2018_lon_4326', 'closest_CH2018_lat_4326']
     metric_cols = [col for col in merged_df.columns if col not in id_cols]
     final_ordered_df = merged_df[id_cols + sorted(metric_cols)]
 
+
+    # Save the final results to a CSV file
     output_path = OUTPUT_DIR / OUTPUT_FILENAME
     print(f"\n5. Saving final merged data to: {output_path}", flush=True)
     final_ordered_df.to_csv(output_path, index=False, float_format='%.4f')

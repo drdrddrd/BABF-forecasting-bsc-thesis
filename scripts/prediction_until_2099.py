@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import os
 import xgboost as xgb
 from tqdm import tqdm
 from pathlib import Path
@@ -8,25 +7,25 @@ import warnings
 from joblib import Parallel, delayed
 import traceback
 
-# --- Global Config ---
-warnings.filterwarnings('ignore', category=FutureWarning)
-pd.options.mode.chained_assignment = None
+# suppress FutureWarnings and chained assignment warnings
+warnings.filterwarnings('ignore', category=FutureWarning) 
+pd.options.mode.chained_assignment = None 
 
-# ================================================================= #
-#                             CONFIG                                #
-# ================================================================= #
+# --- Configuration ---
+
+# Define the RCP scenario and other parameters
 RCP_SCENARIO = "RCP26"
 N_SEEDS = 100
 RANDOMSEED = 35
 N_JOBS = 16 # Number of cores to use for parallel processing
 
-# --- Paths (adjust as needed) ---
+# File Paths
 base_dir = Path("../data/preprocessed/final_nfi_ch2018_merged") 
 input_file = base_dir / f"NFI_with_Climate_Averages_{RCP_SCENARIO}.csv"
 output_dir = Path("../data/predictions") / f"Predictions_{RCP_SCENARIO}"
 output_filename_template = f"NFI_{RCP_SCENARIO}_prediction_seed_{{seed}}.csv"
 
-# --- Feature and Target Definitions  ---
+# Feature and Target Definitions
 FEATURES = [
     'mean_dry_days_count', 'mean_frost_days_count', 'mean_gdd_sum',
     'mean_pr_sum', 'mean_pr_variance', 'mean_tas_mean', 'mean_tas_variance',
@@ -39,7 +38,7 @@ CATEGORICAL_FEATURES = ['BEWIRTINT1', 'NAISHSTKOMB']
 TARGETS = ['BASFPH_next_INVNR', 'HWSW_prop_next_INVNR']
 NUMERIC_FEATURES = [f for f in FEATURES if f not in CATEGORICAL_FEATURES]
 
-# --- XGBoost Hyperparameter ---
+# XGBoost Hyperparameter
 HYPERPARAMETERS = {
     'BASFPH_next_INVNR': {
         'n_estimators': 645,
@@ -81,21 +80,21 @@ def process_single_seed(seed, train_data, prediction_data, final_feature_cols, o
     Receives pre-processed dataframes and the original, unmodified dataframe for final saving.
     """
     try:
-        # --- 1. Prepare Training Data ---
+        # --- Prepare Training Data ---
         X_train = train_data[final_feature_cols]
         y_train = train_data[TARGETS]
 
-        # --- 2. Train Two Independent Models ---
+        # --- Train Two Independent Models ---
         model_basfph = get_model('BASFPH_next_INVNR', seed)
         model_basfph.fit(X_train, y_train['BASFPH_next_INVNR'])
 
         model_hwsw = get_model('HWSW_prop_next_INVNR', seed)
         model_hwsw.fit(X_train, y_train['HWSW_prop_next_INVNR'])
 
-        # --- 3. Prepare Full Data for Iterative Prediction ---
+        # --- Prepare Full Data for Iterative Prediction ---
         prediction_df_processed = prediction_data.copy()
 
-        # --- 4. Run Iterative Prediction Loop ---
+        # --- Run Iterative Prediction Loop ---
         for clnr, plot_data in prediction_df_processed.groupby('CLNR'):
             # Find the row where INVNR == 550 and BASFPH is not NaN
             start_row = plot_data[(plot_data['INVNR'] == 550) & plot_data['BASFPH'].notna()]
@@ -122,18 +121,18 @@ def process_single_seed(seed, train_data, prediction_data, final_feature_cols, o
 
 
 
-        # --- 5. Finalize and Save Results for this Seed ---
-        # A: Extract only the keys and updated columns from our prediction results.
+        # --- Finalize and Save Results for this Seed ---
+        # Extract only the keys and updated columns from our prediction results.
         predicted_values_df = prediction_df_processed[['CLNR', 'INVYR', 'BASFPH', 'HWSW_prop', 'BASFPH_squared']].copy()
 
-        # B: Use the original dataframe. Drop old columns that will be replaced.
+        # Use the original dataframe. Drop old columns that will be replaced.
         output_df = original_data_for_saving.drop(columns=['BASFPH', 'HWSW_prop' , 'BASFPH_squared'], errors='ignore')
 
-        # C: Merge the original data structure with our new predicted values.
+        # Merge the original data structure with our new predicted values.
         final_df = pd.merge(output_df, predicted_values_df, on=['CLNR', 'INVYR'], how='left')
         
         
-        # D: Save to CSV
+        # Save to CSV
         current_output_path = output_dir / output_filename_template.format(seed=seed)
         final_df.to_csv(current_output_path, index=False, float_format='%.4f')
         return True
@@ -151,7 +150,7 @@ if __name__ == "__main__":
     SEEDS = master_rng.randint(0, 100000, N_SEEDS)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # --- 1. Load and Prepare Data Globally  ---
+    # --- Load and Prepare Data Globally  ---
     try:
         full_data = pd.read_csv(input_file)
         print(f"Data loaded successfully. Shape: {full_data.shape}")
@@ -168,25 +167,25 @@ if __name__ == "__main__":
     # Create a safe copy of the original data before any processing for the final save step
     original_data_for_saving = full_data.copy()
 
-    # 1. Perform one-hot encoding on the entire dataset.
+    # Perform one-hot encoding on the entire dataset.
     full_data_processed = pd.get_dummies(full_data, columns=CATEGORICAL_FEATURES, drop_first=True)
     print("One-hot encoding performed on the entire dataset.")
 
-    # 2. Ensure all numeric features are present and handle NaNs
+    # Ensure all numeric features are present and handle NaNs
     ohe_features = [col for col in full_data_processed.columns if col.startswith(tuple(cat + '_' for cat in CATEGORICAL_FEATURES))]
     FINAL_FEATURE_COLS = NUMERIC_FEATURES + ohe_features
     print(f"Total features after one-hot encoding: {len(FINAL_FEATURE_COLS)}")
     
-    # 3. Create the training set by filtering the fully processed data.
+    # Create the training set by filtering the fully processed data.
     train_data_processed = full_data_processed.dropna(subset=TARGETS).copy()
     train_data_processed.dropna(subset=FINAL_FEATURE_COLS, inplace=True) # Ensure no NaNs in features
     print(f"Prepared {len(train_data_processed)} historical records for training.")
 
-    # 4. Prepare the full dataset for prediction (sorting)
+    # Prepare the full dataset for prediction (sorting)
     # The processed data contains the future rows with NaNs to be filled
     prediction_data_processed = full_data_processed.sort_values(by=['CLNR', 'INVYR'], inplace=False, ignore_index=True)
 
-    # --- 2. Run Parallel Predictions ---
+    # --- Run Parallel Predictions ---
     print(f"\nStarting parallel execution on {N_JOBS} cores for {N_SEEDS} seeds...")
     results = Parallel(n_jobs=N_JOBS)(
         delayed(process_single_seed)(

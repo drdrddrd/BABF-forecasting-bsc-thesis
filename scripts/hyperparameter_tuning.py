@@ -12,9 +12,11 @@ from sklearn.metrics import mean_squared_error
 
 # --- Configuration ---
 
-# 1. Define the file path to the dataset
+# The hyperparameter_tuning_results.csv containing the tuned hyperparameters will be saved in the same directory as this script.
+
+# Define the file path to the dataset
 FILE_PATH = '../data/preprocessed/final_nfi_ch2018_merged/NFI_with_Climate_Averages_RCP45.csv'
-# 2. Define features and targets
+# Define features and targets
 # List of features to be used for training
 FEATURES = [
     'mean_dry_days_count', 'mean_frost_days_count', 'mean_gdd_sum',
@@ -49,7 +51,7 @@ LASSO_MAX_ITER = 1000
 # Optuna settings for XGBoost
 N_TRIALS_OPTUNA = 1000 
 
-# --- 1. Data Loading and Preprocessing  ---
+# --- Data Loading and Preprocessing  ---
 
 def load_and_preprocess_data(filepath):
     """
@@ -70,7 +72,7 @@ def load_and_preprocess_data(filepath):
     if missing_cols:
         raise ValueError(f"Required columns not found in the DataFrame: {missing_cols}")
 
-
+    # Print the initial number of rows in the DataFrame
     initial_rows = len(df)
     print(f"Initial number of rows: {initial_rows}")
     
@@ -111,7 +113,7 @@ def load_and_preprocess_data(filepath):
     return X, y, strata_series
 
 
-# --- 2. Model Tuning Functions ---
+# --- Model Tuning Functions ---
 
 def tune_lasso_cv(X, y_series, strata_col):
     """
@@ -167,7 +169,7 @@ def tune_xgboost_optuna(X, y_series, strata_col, target_name): # No scaler neede
             'reg_lambda': trial.suggest_float('lambda', 1e-8, 1.0, log=True),  # L2 regularization
             'reg_alpha': trial.suggest_float('alpha', 1e-8, 1.0, log=True),  # L1 regularization
             
-            'random_state': RANDOM_STATE,  # Ensures reproducibility
+            'random_state': RANDOM_STATE,  # For reproducibility
             'n_jobs': -1  # Use all available cores for parallelism
         }
         
@@ -201,7 +203,7 @@ def tune_xgboost_optuna(X, y_series, strata_col, target_name): # No scaler neede
     return best_params
 
 
-# --- 3. Save Results Function ---
+# --- Save Results Function ---
 
 def save_results_to_csv(results_dict, script_path):
     """
@@ -238,7 +240,7 @@ def save_results_to_csv(results_dict, script_path):
         print(f"\nAn error occurred while saving the results to CSV: {e}")
 
 
-# --- 4. Main Execution Block ---
+# --- Main Execution Block ---
 
 def main():
     """
@@ -271,11 +273,10 @@ def main():
         script_path = os.path.realpath(__file__)
         save_results_to_csv(all_best_params, script_path)  # Save results to CSV
     except NameError:
-        # __file__ is not defined in some environments (like Jupyter notebooks)
         print("\nCould not determine script path automatically.")
         print("Saving results to the current working directory.")
         save_results_to_csv(all_best_params, os.getcwd())  # Save results to current working directory
 
-
+# Run the main function
 if __name__ == '__main__':
-    main()  # Run the main function
+    main()  
