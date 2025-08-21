@@ -56,15 +56,6 @@ This project is an ordered pipeline. Execute the following steps from the reposi
 | 07 | `scripts/prediction_until_2099.py`             | make predictions until 2099 (was done on the euler cluster, output files are in data.zip). has to be run for each RCP scenario seperately                                   |
 | 08 | `notebooks/prediction_plots.ipynb`             | make plots of predicted values until 2099 thesis.                                                                               |
 
-
-## How to run
-
-### Notebooks
-jupyter lab   # then "Run All" in each numbered notebook
-
-### Scripts (example)
-python scripts/hyperparameter_tuning.py
-
 ## Outputs
 Final plots are saved to results/plots/ and prediction data is saved as data/final_predictions.csv.
 
