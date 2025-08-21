@@ -48,16 +48,16 @@ This project is an ordered pipeline. Execute the following steps from the reposi
 | #  | Step (file)                                    | Purpose                                                                                                                                                             |
 |----|------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 01 | `notebooks/NFI_preprocessing_until_2099.ipynb` | Preprocess NFI data using the template through 2099 to combine with the climate data.  data.                                                                                           |
-| 02 | `scripts/euler_CH2018_processing.py`           | Takes raw CH2018 files and computes yearly metrics for selected coordinates (was run on the Euler cluster, output files are in data.zip). Not runnable here because the data is too large.                                      |
+| 02 | `scripts/euler_CH2018_processing.py`           | Takes raw CH2018 files and computes yearly metrics for selected coordinates (was run on the Euler cluster, output files are in `data.zip`). Not runnable here because the data is too large.                                      |
 | 03 | `notebooks/CH2018_preprocessing.ipynb`         | Further preprocesses climate data and combines it with the NFI data.                                                                                                                      |
 | 04 | `notebooks/NFI_CH2018_plots.ipynb`             | Create plots with the NFI and CH2018 dataset.                                                                                                                  |
 | 05 | `scripts/hyperparameter_tuning.py`             | Tune hyperparameters (was run on the Euler cluster; the tuned hyperparameters are implemented in `model_evaluation.ipynb` and in `prediction_until_2099`). Run once with INVNR 150,250,350 (for model evaluation) and once with INVNR 150,250,350,450 (for iterative forecasting).                                |
 | 06 | `notebooks/model_evaluation.ipynb`             | Train and evaluate models.                                                                                              |
-| 07 | `scripts/prediction_until_2099.py`             | Make predictions until 2099 (was run on the Euler cluster; output files are in data.zip). Must be run for each RCP scenario separately.                                   |
+| 07 | `scripts/prediction_until_2099.py`             | Make predictions until 2099 (was run on the Euler cluster; output files are in `data.zip`). Must be run for each RCP scenario separately.                                   |
 | 08 | `notebooks/prediction_plots.ipynb`             | Make plots of predicted values until 2099 for the thesis.                                                                               |
 
 ## Outputs
-Final plots are saved to results/plots/ and prediction data is saved as data/final_predictions.csv.
+Final plots are saved to results/plots/ and prediction data is saved as `data/final_predictions.csv`.
 
 ## Author
 Dea Rieder
