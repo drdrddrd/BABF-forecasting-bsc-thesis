@@ -8,7 +8,7 @@ Follow these steps to set up the project and reproduce the results.
 
 ## Data
 
-To fully reproduce the results, you must first obtain the original raw data from the sources listed below.
+To fully reproduce the results, you must first obtain the original raw data.
 
 **Obtaining the Data:**
 1. Swiss National Forest Inventory (NFI)
@@ -16,9 +16,11 @@ The NFI data is confidential and subject to a data usage agreement. It is not pu
 - **How to get it:** You must request the data directly from the Swiss Federal Institute for Forest, Snow and Landscape Research (WSL). This typically involves signing a formal agreement ("Vereinbarung") for a specific, non-commercial research purpose.
 - **Contact:** To initiate a request, contact the LFI team at WSL. More information can be found on the NFI website: (https://www.lfi.ch/en/services/data-supply)
 - **Restrictions:** Redistribution of the raw data is strictly prohibited
+
 2. Swiss Climate Change Scenarios (CH2018)
 The CH2018 climate data is publicly available.
 - **How to get it:** The dataset is available on request via a contact form: (https://www.nccs.admin.ch/nccs/en/home/climate-change-and-impacts/swiss-climate-change-scenarios/contact.html)
+
 3. Swisstopo data
 The Swisstopo data is publicly available.
 - **How to get it:** The data can be downloaded at (https://www.swisstopo.admin.ch/de/ubersichtskarten-der-schweiz) and (https://www.swisstopo.admin.ch/en/landscape-model-swissboundaries3d)
@@ -35,9 +37,10 @@ The Swisstopo data is publicly available.
 
 Set up the Conda environment using the provided file.
 
-```bash```
+```bash
 conda env create -f BABF_env.yaml
 conda activate tf
+```
 
 ## Workflow to Reproduce Results
 
