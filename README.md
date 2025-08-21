@@ -8,15 +8,28 @@ Follow these steps to set up the project and reproduce the results.
 
 ## Data
 
-This project requires the `data.zip` file. Unzip it in the repository root. This will create the `data/` directory containing:
-- Raw NFI datasets.
-- Outputs from computationally intensive steps (e.g., raw CH2018 data preprocessing, that were run on the euler cluster.
+To fully reproduce the results, you must first obtain the original raw data from the sources listed below.
 
-**Original Data Sources:**
-- **NFI:** [Swiss National Forest Inventory](https://www.lfi.ch/en/services/data-supply)
-Citation: WSL, 2025: Schweizerisches Landesforstinventar LFI. Daten der Erhebung(en) 1993-95 / 2004-06 / 2009-2017 / 2018-2024. Christian Temperli. Eidg. Forschungsanstalt, Bimensdorf
-- **CH2018:** [Swiss Climate Change Scenarios](https://www.nccs.admin.ch/nccs/en/home/climate-change-and-impacts/swiss-climate-change-scenarios/ch2018---climate-scenarios-for-switzerland.html)
-Citation:  CH2018 Project Team (2018): CH2018 - Climate Scenarios for Switzerland. National Centre for Climate Services. doi: 10.18751/Climate/Scenarios/CH2018/1.0
+**Obtaining the Data:**
+1. Swiss National Forest Inventory (NFI)
+The NFI data is confidential and subject to a data usage agreement. It is not publicly downloadable.
+- **How to get it:** You must request the data directly from the Swiss Federal Institute for Forest, Snow and Landscape Research (WSL). This typically involves signing a formal agreement ("Vereinbarung") for a specific, non-commercial research purpose.
+- **Contact:** To initiate a request, contact the LFI team at WSL. More information can be found on the NFI website: (https://www.lfi.ch/en/services/data-supply)
+- **Restrictions:** Redistribution of the raw data is strictly prohibited
+2. Swiss Climate Change Scenarios (CH2018)
+The CH2018 climate data is publicly available.
+- **How to get it:** The dataset is available on request via a contact form: (https://www.nccs.admin.ch/nccs/en/home/climate-change-and-impacts/swiss-climate-change-scenarios/contact.html)
+3. Swisstopo data
+The Swisstopo data is publicly available.
+- **How to get it:** The data can be downloaded at (https://www.swisstopo.admin.ch/de/ubersichtskarten-der-schweiz) and (https://www.swisstopo.admin.ch/en/landscape-model-swissboundaries3d)
+
+
+**Citations:**
+- **NFI:** WSL, 2025: Schweizerisches Landesforstinventar LFI. Daten der Erhebung(en) 1993-95 / 2004-06 / 2009-2017 / 2018-2024. Christian Temperli. Eidg. Forschungsanstalt, Bimensdorf
+- **CH2018:** CH2018 Project Team (2018): CH2018 - Climate Scenarios for Switzerland. National Centre for Climate Services. doi: 10.18751/Climate/Scenarios/CH2018/1.0
+- **Swisstopo:** 
+    - **Overview Maps:** Federal Office of Topography (swisstopo). Overview maps of Switzerland (Übersichtskarten der Schweiz), 2024. Place: Wabern, Switzerland, Published: Web page, URL: https://www.swisstopo.admin.ch/de/ubersichtskarten-der-schweiz, Accessed: 2025-07-16
+    - **Swissboundaries3d:** Federal Office of Topography (swisstopo). swissBOUNDARIES3D: Administrative boundaries of Switzerland and Liechtenstein, 2024. Place: Wabern, Switzerland Published: Webpage, URL: https://www.swisstopo.admin.ch/en/landscape-model-swissboundaries3d, Accessed: 2025-07-16.
 
 ## Environment
 

@@ -1,12 +1,10 @@
-# Data files and folders
-data.zip
-data/raw/
-data/preprocessed/
-
 # Ignore large file extensions
 *.nc
 *.tif
 *.zip
+*.png
+*.csv
+*.pdf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
