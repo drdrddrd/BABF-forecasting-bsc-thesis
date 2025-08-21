@@ -22,11 +22,9 @@ Citation:  CH2018 Project Team (2018): CH2018 - Climate Scenarios for Switzerlan
 
 Set up the Conda environment using the provided file.
 
-```bash
-# From the repository root
+```bash```
 conda env create -f BABF_env.yaml
 conda activate tf
-
 
 ## Workflow to Reproduce Results
 
