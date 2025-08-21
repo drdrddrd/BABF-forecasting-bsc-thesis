@@ -3,7 +3,6 @@
 This repository contains the code for a BSc thesis that forecasts changes in Swiss forests using a machine learning model. An XGBoost algorithm was trained on data from the Swiss National Forest Inventory (NFI) and CH2018 climate scenarios to predict future basal area and broadleaf fraction until 2099.
 
 
-
 Follow these steps to set up the project and reproduce the results.
 
 ## Data
@@ -38,7 +37,7 @@ The Swisstopo data is publicly available.
 Set up the Conda environment using the provided file.
 
 ```bash
-conda env create -f BABF_env.yaml
+conda env create -f BABF_env.yml
 conda activate tf
 ```
 

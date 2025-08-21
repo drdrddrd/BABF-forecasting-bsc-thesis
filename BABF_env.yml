@@ -1,0 +1,15 @@
+name: tf
+channels:
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - tensorflow
+  - jupyterlab
+  - ipywidgets
+  - scikit-optimize
+  - openml
+  - autogluon
+  - jupyter_client[version='<8']
+  - notebook
+  - pyzmq[version='<25']
