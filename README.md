@@ -40,6 +40,7 @@ Do not rename these folders, the scripts use them as fixed paths.
 ```text
 .
 ├── data
+│   ├── hyperparameters
 │   ├── predictions
 │   │   ├── Predictions_RCP26
 │   │   ├── Predictions_RCP45
