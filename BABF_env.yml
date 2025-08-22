@@ -1,15 +1,17 @@
-name: tf
+name: BABF_env
 channels:
+  - conda-forge
   - defaults
-  - https://repo.anaconda.com/pkgs/main
-  - https://repo.anaconda.com/pkgs/r
 dependencies:
-  - tensorflow
+  - xgboost
   - jupyterlab
-  - ipywidgets
-  - scikit-optimize
-  - openml
-  - autogluon
-  - jupyter_client[version='<8']
+  - scikit-learn
+  - matplotlib
+  - seaborn
   - notebook
-  - pyzmq[version='<25']
+  - geopandas
+  - rasterio
+  - matplotlib-scalebar
+  - xarray
+  - optuna
+  - tqdm
