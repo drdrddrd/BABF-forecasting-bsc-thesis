@@ -66,7 +66,7 @@ Set up the Conda environment using the provided file.
 
 ```bash
 conda env create -f BABF_env.yml
-conda activate tf
+conda activate BABF_env
 ```
 
 ## Workflow to Reproduce Results
