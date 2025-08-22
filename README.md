@@ -37,6 +37,7 @@ The Swisstopo data is publicly available.
 The code assumes the following directory layout (relative to the repo root).
 Do not rename these folders, the scripts use them as fixed paths.
 
+```text
 .
 ├── data
 │   ├── predictions
@@ -57,7 +58,7 @@ Do not rename these folders, the scripts use them as fixed paths.
 │   └── predictions
 ├── notebooks
 └── scripts
-
+```
 
 ## Environment
 
